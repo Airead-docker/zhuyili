@@ -1,0 +1,17 @@
+version: '3'
+services:
+  web:
+    image: zhuyili
+    build: .
+    volumes:
+      - .:/app
+    ports:
+     - "3000:3000"
+  redis:
+    image: "redis:alpine"
+    volumes:
+      - redis_data:/data:rw
+
+volumes:
+  redis_data:
+    driver: local
