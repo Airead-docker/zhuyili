@@ -1,6 +1,6 @@
 const express = require('express')
 const dns = require('dns')
-const redis = require('redis')
+const MongoClient = require('mongodb').MongoClient
 
 const app = express()
 
@@ -11,23 +11,47 @@ process.on('SIGTERM', function() {
     process.exit();
 });
 
-const client = redis.createClient('redis://redis')
-client.on("error", function (err) {
-    console.log("Error " + err);
-});
+const dbName = 'zhuyili'
+const url = 'mongodb://mongodb:27017'
+var db = null
+MongoClient.connect(url, function(err, client) {
+    if (err) {
+        console.log(err)
+        process.exit(1)
+    }
+    console.log("Connected successfully to server")
 
-dns.lookup('redis', (err, address, family) => {
+    db = client.db(dbName)
+})
+
+dns.lookup('mongodb', (err, address, family) => {
     console.log(err, address, family)
 })
 
 app.get('/', (req, res) => res.send('Hello World Airead!'))
 
 app.get('/:type/:start_ts/:times', (req, res) => {
-    const key = [req.params.type, req.params.start_ts, req.params.times].join(':')
-    console.log('received', key)
-    client.set(key, '', (err, reply) => {
-        console.log(err, reply)
-        res.send(reply)
+    console.log('received', req.params)
+    const coll = db.collection('records')
+    coll.insert(req.params, (err, result) => {
+        if (err) {
+            console.log('err', err)
+            return
+        }
+        console.log('result', result)
+        res.send('ok')
+    })
+})
+
+app.get('/list', (req, res) => {
+    const coll = db.collection('records')
+    coll.find({}).toArray((err, docs) => {
+        if (err) {
+            console.log('err', err)
+            return
+        }
+        console.log('get', docs.length)
+        res.json(docs)
     })
 })
 

@@ -7,11 +7,11 @@ services:
       - .:/app
     ports:
      - "3000:3000"
-  redis:
-    image: "redis:alpine"
+  mongodb:
+    image: "mongo:4"
     volumes:
-      - redis_data:/data:rw
+      - mongo_data:/data/db:rw
 
 volumes:
-  redis_data:
+  mongo_data:
     driver: local
