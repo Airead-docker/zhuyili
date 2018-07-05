@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>zhuyili</title>
+    <style>
+        html,
+        body {
+            width: 100%;
+        }
+
+        table {
+            margin-bottom: 30px;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 2px 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="records">
+    </div>
+    <script>
+        var recordsElem = document.getElementById('records')
+
+        var types = {
+            mxf: '眉心法'
+        }
+
+        ajax('/list', function (err, ret) {
+            console.log('ret', ret)
+            var origin_records = JSON.parse(ret)
+            var tableByDay = createTable(summaryRecordsByDay(origin_records))
+            recordsElem.appendChild(tableByDay)
+
+            var table = createTable(formatRecords(origin_records))
+            recordsElem.appendChild(table)
+
+
+        })
+
+        function formatRecords(records) {
+            ret = []
+            for (var i = 0; i < records.length; i++) {
+                var rec = records[i]
+                ret[i] = []
+                ret[i][0] = types[rec[0]]
+                ret[i][1] = formatDate(new Date(parseInt(rec[1]) + 8*3600*1000))
+                ret[i][2] = parseInt(rec[2] / 1000)
+            }
+            return ret
+        }
+
+        function formatTime(seconds) {
+            var units = ['s', 'm', 'h']
+            var unit_index = 0
+            var digtal = seconds
+            while (seconds / 60 >= 1) {
+                if (unit_index >= 2) {
+                    break
+                }
+                digtal = seconds % 60
+                seconds = parseInt(seconds / 60)
+                unit_index++
+            }
+            ret = seconds + units[unit_index]
+            if (unit_index > 0 && digtal !== 0) {
+                ret += digtal + units[unit_index - 1]
+            }
+            return ret
+        }
+
+        function formatDate(date) {
+            return date.toISOString().substr(0, 19).replace('T', ' ')
+        }
+
+        function createTable(records) {
+            var table = document.createElement('table')
+            var header = createRow(['type', 'start', 'time'])
+            table.appendChild(header)
+            for (var i = 0; i < records.length; i++) {
+                console.log('record', records[i])
+                var row = createRow(records[i])
+                table.appendChild(row)
+            }
+            return table
+        }
+
+        function createRow(elems) {
+            var tr = document.createElement('tr')
+            for (var i = 0; i < elems.length; i++) {
+                var td = document.createElement('td')
+                td.innerHTML = elems[i]
+                tr.appendChild(td)
+            }
+            return tr
+        }
+
+        function summaryRecordsByDay(records) {
+            var ret = {}
+            for (var i = 0; i < records.length; i++) {
+                var rec = records[i]
+                console.log('records', rec)
+                day = formatDate(new Date(parseInt(rec[1]) + 8*3600*1000)).split(' ')[0]
+                var key = [day, rec[0]].join('#')
+                if (!ret[key]) {
+                    ret[key] = 0
+                }
+                ret[key] += parseInt(rec[2])
+            }
+            var arr = []
+            var keys = Object.keys(ret).sort()
+            for (var j = 0; j < keys.length; j++) {
+                console.log('key', keys[j])
+                var fields = keys[j].split('#')
+                var type = types[fields[1]]
+                var day = fields[0]
+                var time = formatTime(parseInt(ret[keys[j]]/1000))
+                arr.push([type, day, time])
+            }
+            return arr
+        }
+
+        function ajax(url, callback) {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    // console.log('insert', this.responseText)
+                    callback(null, this.responseText)
+                }
+            };
+            xhttp.open("GET", url, true)
+            xhttp.send();
+        }
+    </script>
+</body>
+
+</html>

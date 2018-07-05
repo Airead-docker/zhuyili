@@ -28,9 +28,9 @@ dns.lookup('mongodb', (err, address, family) => {
     console.log(err, address, family)
 })
 
-app.get('/', (req, res) => res.send('Hello World Airead!'))
+app.use(express.static('public'))
 
-app.get('/:type/:start_ts/:times', (req, res) => {
+app.get('/insert/:type/:start_ts/:mseconds', (req, res) => {
     console.log('received', req.params)
     const coll = db.collection('records')
     coll.insert(req.params, (err, result) => {
@@ -50,8 +50,12 @@ app.get('/list', (req, res) => {
             console.log('err', err)
             return
         }
-        console.log('get', docs.length)
-        res.json(docs)
+        let ret = []
+        docs.forEach(function(doc) {
+            ret.push([doc.type, doc.start_ts, doc.mseconds])
+        })
+        console.log('get', ret.length)
+        res.json(ret)
     })
 })
 

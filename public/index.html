@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>zhuyili</title>
+    <style>
+        html,
+        body {
+            width: 100%;
+        }
+
+        .button {
+            width: 100%;
+        }
+
+        .button button {
+            margin: auto;
+            font-size: 100px;
+            border: 1px solid black;
+            width: 300px;
+            height: 200px;
+            outline: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="button">
+        <button id="button">Start</button>
+    </div>
+    <div>
+        <a id="list" href="/list.html">List</a>
+    </div>
+    <script>
+        var practiseStart = Date.now()
+        var button = document.getElementById('button')
+        button.onclick = function (event) {
+            button.disabled = true
+            var label = event.target.innerHTML
+            console.log("click", label)
+            if (label == 'Start') {
+                start_exercise()
+                button.innerHTML = 'Stop'
+            } else {
+                label == 'Stop'
+                stop_exercise()
+                button.innerHTML = 'Start'
+            }
+            setTimeout(function () {
+                button.disabled = false
+            }, 2000)
+        }
+
+        function start_exercise() {
+            practiseStart = Date.now()
+        }
+
+        function stop_exercise() {
+            var time = Date.now() - practiseStart
+            ajax('/insert/mxf/' + practiseStart + '/' + time)
+        }
+
+        function ajax(url, callback) {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    console.log('insert', this.responseText)
+                }
+            };
+            xhttp.open("GET", url, true);
+            xhttp.send();
+        }
+    </script>
+</body>
+
+</html>
